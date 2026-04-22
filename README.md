@@ -68,7 +68,6 @@
 - DBeaver
 
 
-
 Если в проекте дополнительно используется SQL-файл создания витрин ClickHouse, его также следует хранить в репозитории.
 
 ## Описание файлов
@@ -82,14 +81,18 @@
 - Spark Worker
 - ClickHouse
 
-### `etl_to_star.py`
+### `load_mock_data.sql`
+
+SQL-скрипт создания и заполнения таблицы `public.mock_data` из 10 исходных CSV-файлов.
+
+### `app/etl_to_star.py`
 
 Spark-джоба, которая:
 
 - читает `public.mock_data` из PostgreSQL
 - строит модель данных звезда в PostgreSQL
 
-### `etl_to_clickhouse.py`
+### `app/etl_to_clickhouse.py`
 
 Spark-джоба, которая:
 
@@ -116,9 +119,11 @@ Spark-джоба, которая:
 - `MOCK_DATA (9).csv`
 - `MOCK_DATA.csv`
 
-Каждый файл содержит 1000 строк. Общее количество строк после загрузки в PostgreSQL:
+Каждый файл содержит 1000 строк.
 
-- `10000`
+После загрузки всех файлов в PostgreSQL таблица `public.mock_data` содержит:
+
+- `10000` строк
 
 ## Архитектура решения
 
@@ -267,11 +272,13 @@ Spark-джоба `etl_to_star.py` выполняет трансформацию:
 
 - `public.mock_data`
 
-Загрузка может быть выполнена, например, через DBeaver.
+Загрузка выполняется SQL-скриптом:
+
+    docker exec -i postgres_bd psql -U user -d lab < load_mock_data.sql
 
 После загрузки необходимо проверить количество строк:
 
-    select count(*) from public.mock_data;
+    docker exec -it postgres_bd psql -U user -d lab -c "select count(*) from public.mock_data;"
 
 Ожидаемый результат:
 
@@ -281,12 +288,12 @@ Spark-джоба `etl_to_star.py` выполняет трансформацию:
 
 В проекте используются две Spark-джобы:
 
-1. `etl_to_star.py`
-2. `etl_to_clickhouse.py`
+1. `app/etl_to_star.py`
+2. `app/etl_to_clickhouse.py`
 
 Их необходимо запускать строго в этом порядке.
 
-### Spark-джоба 1 — `etl_to_star.py`
+### Spark-джоба 1 — `app/etl_to_star.py`
 
 #### Назначение
 
@@ -310,7 +317,7 @@ Spark-джоба `etl_to_star.py` выполняет трансформацию:
 
 #### Команда запуска
 
-    docker exec -it spark_bd /opt/spark/bin/spark-submit --master spark://spark:7077 --conf spark.jars.ivy=/tmp/ivy --packages org.postgresql:postgresql:42.7.10 /opt/project/etl_to_star.py
+    docker exec -it spark_bd /opt/spark/bin/spark-submit --master spark://spark:7077 --conf spark.jars.ivy=/tmp/ivy --packages org.postgresql:postgresql:42.7.10 /opt/project/app/etl_to_star.py
 
 #### Проверка результата
 
@@ -356,7 +363,7 @@ Spark-джоба `etl_to_star.py` выполняет трансформацию:
     docker exec -it clickhouse_bd clickhouse-client -q "CREATE USER IF NOT EXISTS spark_user IDENTIFIED WITH plaintext_password BY 'sparkpass'"
     docker exec -it clickhouse_bd clickhouse-client -q "GRANT ALL ON lab.* TO spark_user"
 
-### Spark-джоба 2 — `etl_to_clickhouse.py`
+### Spark-джоба 2 — `app/etl_to_clickhouse.py`
 
 #### Назначение
 
@@ -386,7 +393,7 @@ Spark-джоба `etl_to_star.py` выполняет трансформацию:
 
 #### Команда запуска
 
-    docker exec -it spark_bd /opt/spark/bin/spark-submit --master spark://spark:7077 --conf spark.jars.ivy=/tmp/ivy --packages org.postgresql:postgresql:42.7.10 /opt/project/etl_to_clickhouse.py
+    docker exec -it spark_bd /opt/spark/bin/spark-submit --master spark://spark:7077 --conf spark.jars.ivy=/tmp/ivy --packages org.postgresql:postgresql:42.7.10 /opt/project/app/etl_to_clickhouse.py
 
 #### Проверка результата
 
@@ -404,13 +411,13 @@ Spark-джоба `etl_to_star.py` выполняет трансформацию:
 Для проверки лабораторной работы необходимо выполнить следующие действия:
 
 1. поднять контейнеры через `docker compose up -d`
-2. загрузить 10 CSV-файлов в `public.mock_data`
+2. загрузить 10 CSV-файлов в `public.mock_data` с помощью `load_mock_data.sql`
 3. убедиться, что `public.mock_data` содержит 10000 строк
-4. запустить Spark-джобу `etl_to_star.py`
+4. запустить Spark-джобу `app/etl_to_star.py`
 5. убедиться, что таблицы модели звезда созданы в PostgreSQL
 6. создать базу и витрины в ClickHouse
 7. создать пользователя `spark_user` в ClickHouse
-8. запустить Spark-джобу `etl_to_clickhouse.py`
+8. запустить Spark-джобу `app/etl_to_clickhouse.py`
 9. проверить заполнение всех 6 витрин
 10. выполнить контрольные SQL-запросы
 
@@ -463,6 +470,7 @@ Spark-джоба `etl_to_star.py` выполняет трансформацию:
 
 - исходные файлы `mock_data(*).csv`
 - `docker-compose.yml` для запуска PostgreSQL, Spark и ClickHouse
+- SQL-скрипт загрузки исходных данных в `public.mock_data`
 - инструкцию по запуску Spark-джоб для проверки лабораторной работы
 - код Spark-трансформации из raw-слоя в модель звезда PostgreSQL
 - код Spark-трансформации из модели звезда в витрины ClickHouse
