@@ -67,24 +67,7 @@
 - Python / PySpark
 - DBeaver
 
-## Состав репозитория
 
-    .
-    ├── README.md
-    ├── docker-compose.yml
-    ├── etl_to_star.py
-    ├── etl_to_clickhouse.py
-    └── исходные данные/
-        ├── MOCK_DATA (1).csv
-        ├── MOCK_DATA (2).csv
-        ├── MOCK_DATA (3).csv
-        ├── MOCK_DATA (4).csv
-        ├── MOCK_DATA (5).csv
-        ├── MOCK_DATA (6).csv
-        ├── MOCK_DATA (7).csv
-        ├── MOCK_DATA (8).csv
-        ├── MOCK_DATA (9).csv
-        └── MOCK_DATA.csv
 
 Если в проекте дополнительно используется SQL-файл создания витрин ClickHouse, его также следует хранить в репозитории.
 
