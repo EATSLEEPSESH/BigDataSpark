@@ -127,7 +127,7 @@ erDiagram
     dim_store ||--o{ fact_sales : "store_id"
     dim_supplier ||--o{ fact_sales : "supplier_id"
     dim_date ||--o{ fact_sales : "date_id"
-
+```
 ## Что реализовано
 
 ### 1. Исходный слой данных в PostgreSQL
