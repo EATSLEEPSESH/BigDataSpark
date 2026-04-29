@@ -22,6 +22,112 @@
 
 Цель работы — реализовать ETL-процесс с помощью Apache Spark для обработки исходных данных `mock_data(*).csv`, построения модели данных звезда в PostgreSQL и формирования аналитических витрин в ClickHouse.
 
+---
+
+## Структура модели данных в PostgreSQL
+
+### Измерения
+- `dim_customer`
+- `dim_seller`
+- `dim_product`
+- `dim_store`
+- `dim_supplier`
+- `dim_date`
+
+### Факт
+- `fact_sales`
+
+### Схема «звезда» (визуализация)
+```mermaid
+erDiagram
+    dim_customer {
+        bigint customer_id PK
+        text customer_first_name
+        text customer_last_name
+        text customer_age
+        text customer_email
+        text customer_country
+        text customer_postal_code
+        text customer_pet_type
+        text customer_pet_name
+        text customer_pet_breed
+    }
+    dim_seller {
+        bigint seller_id PK
+        text seller_first_name
+        text seller_last_name
+        text seller_email
+        text seller_country
+        text seller_postal_code
+    }
+    dim_product {
+        bigint product_id PK
+        text product_name
+        text product_category
+        double product_price
+        text product_quantity
+        text pet_category
+        double product_weight
+        text product_color
+        text product_size
+        text product_brand
+        text product_material
+        text product_description
+        double product_rating
+        double product_reviews
+        text product_release_date
+        text product_expiry_date
+    }
+    dim_store {
+        bigint store_id PK
+        text store_name
+        text store_location
+        text store_city
+        text store_state
+        text store_country
+        text store_phone
+        text store_email
+    }
+    dim_supplier {
+        bigint supplier_id PK
+        text supplier_name
+        text supplier_contact
+        text supplier_email
+        text supplier_phone
+        text supplier_address
+        text supplier_city
+        text supplier_country
+    }
+    dim_date {
+        bigint date_id PK
+        date full_date
+        int year
+        int month
+        int day
+        int quarter
+    }
+    fact_sales {
+        text sale_id PK
+        bigint customer_id FK
+        bigint seller_id FK
+        bigint product_id FK
+        bigint store_id FK
+        bigint supplier_id FK
+        bigint date_id FK
+        double sale_quantity
+        double sale_total_price
+        double product_price
+        double product_rating
+        double product_reviews
+    }
+
+    dim_customer ||--o{ fact_sales : "customer_id"
+    dim_seller ||--o{ fact_sales : "seller_id"
+    dim_product ||--o{ fact_sales : "product_id"
+    dim_store ||--o{ fact_sales : "store_id"
+    dim_supplier ||--o{ fact_sales : "supplier_id"
+    dim_date ||--o{ fact_sales : "date_id"
+
 ## Что реализовано
 
 ### 1. Исходный слой данных в PostgreSQL
